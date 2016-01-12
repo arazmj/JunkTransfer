@@ -1,6 +1,6 @@
 # JunkTransfer
 
-## Build instructions 
+## Dependencies
 This project requires JDK 1.8 and Ant build system. 
 
 ## Build Instruction
