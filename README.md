@@ -26,13 +26,10 @@ I also made the TokenBucket thread-safe as the bucket object is going to be shar
 I also employed “Philip Isenhour” CompressedBlockOutputStream, CompressedBlockOutputStream to compress the data as it being sent over the wire. The alternative solutions would be to compress the entire chunk or the original file before it is sent over the wire. The problem with other typical techniques of compression as it is mentioned in his web site is that large compression operation takes a considerable amount of CPU resource before we start to transmit the data whereas making the transmission data into even smaller chunks (1024 bytes in our solution) makes a good utilization of CPU and network resources and gaining a good compression ratio over the time of transmission. The compression chunk size is still a trade-off between computation overhead (on both client and servers) and network resources. 
 
 ### Performance
-#Minimize the total time it takes to send the entirefile.
 The use of low granular timer, fine tuned token bucket allows the best utilization of minimum bandwidth specified by the user.
 
-### Minimize the communication overhead.
 Applying ZLIB compression to the traffic flow may result in much less communication overhead depending on the entropy of the data.
 
-### Minimize system resources consumed during the transfer.
 I used Buffers Streams on all IO streams with a single exception for socket output stream as it is required to have full control on the number of bytes being sent in order to limit the bandwidth.  Guava ByteStreams.copy simply uses block-based copy, the copy operation is as fast as it can.
 The constructor of SpeedLimitedOutputStream takes a burst value to specify the maximum number of bytes that can be sent over the wire instantly on a single SpeedLimitedOutputStream.write(…) call. This provides the ability to make a choice between CPU resources vs burstiness of the traffic on the wire. 
 
