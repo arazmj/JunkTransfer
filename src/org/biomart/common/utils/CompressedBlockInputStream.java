@@ -40,11 +40,6 @@ public class CompressedBlockInputStream extends FilterInputStream {
     private byte[] inBuf = null;
 
     /**
-     * Length of data in the input data
-     */
-    private int inLength = 0;
-
-    /**
      * Buffer of uncompressed data
      */
     private byte[] outBuf = null;
@@ -65,9 +60,8 @@ public class CompressedBlockInputStream extends FilterInputStream {
      * Wrap an input stream and decompress the data from it.
      *
      * @param is the input stream.
-     * @throws IOException if anything went wrong.
      */
-    public CompressedBlockInputStream(final InputStream is) throws IOException {
+    public CompressedBlockInputStream(final InputStream is) {
         super(is);
         this.inflater = new Inflater();
     }
@@ -80,7 +74,10 @@ public class CompressedBlockInputStream extends FilterInputStream {
         int ch4 = this.in.read();
         if ((ch1 | ch2 | ch3 | ch4) < 0)
             throw new EOFException();
-        this.inLength = (ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0);
+        /*
+      Length of data in the input data
+     */
+        int inLength = (ch1 << 24) + (ch2 << 16) + (ch3 << 8) + ch4;
 
         ch1 = this.in.read();
         ch2 = this.in.read();
@@ -88,11 +85,11 @@ public class CompressedBlockInputStream extends FilterInputStream {
         ch4 = this.in.read();
         if ((ch1 | ch2 | ch3 | ch4) < 0)
             throw new EOFException();
-        this.outLength = (ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0);
+        this.outLength = (ch1 << 24) + (ch2 << 16) + (ch3 << 8) + ch4;
 
         // Make sure we've got enough space to read the block
-        if (this.inBuf == null || this.inLength > this.inBuf.length)
-            this.inBuf = new byte[this.inLength];
+        if (this.inBuf == null || inLength > this.inBuf.length)
+            this.inBuf = new byte[inLength];
 
         if (this.outBuf == null || this.outLength > this.outBuf.length)
             this.outBuf = new byte[this.outLength];
@@ -102,15 +99,15 @@ public class CompressedBlockInputStream extends FilterInputStream {
         // requested data has been read, so we loop until
         // we're done.
         int inOffs = 0;
-        while (inOffs < this.inLength) {
-            final int inCount = this.in.read(this.inBuf, inOffs, this.inLength
+        while (inOffs < inLength) {
+            final int inCount = this.in.read(this.inBuf, inOffs, inLength
                     - inOffs);
             if (inCount == -1)
                 throw new EOFException();
             inOffs += inCount;
         }
 
-        this.inflater.setInput(this.inBuf, 0, this.inLength);
+        this.inflater.setInput(this.inBuf, 0, inLength);
         try {
             this.inflater.inflate(this.outBuf);
         } catch (final DataFormatException dfe) {

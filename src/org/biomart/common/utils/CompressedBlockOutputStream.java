@@ -63,7 +63,7 @@ public class CompressedBlockOutputStream extends FilterOutputStream {
      * @param size the buffer size to use.
      * @throws IOException if anything went wrong.
      */
-    public CompressedBlockOutputStream(final OutputStream os, final int size)
+    public CompressedBlockOutputStream(final int size, final OutputStream os)
             throws IOException {
         this(os, size, Deflater.DEFAULT_COMPRESSION, Deflater.DEFAULT_STRATEGY);
     }
@@ -78,10 +78,9 @@ public class CompressedBlockOutputStream extends FilterOutputStream {
      * @param size     the buffer size to use.
      * @param level    the compression level.
      * @param strategy the compression strategy.
-     * @throws IOException if anything went wrong.
      */
     public CompressedBlockOutputStream(final OutputStream os, final int size,
-                                       final int level, final int strategy) throws IOException {
+                                       final int level, final int strategy) {
         super(os);
         this.inBuf = new byte[size];
         this.outBuf = new byte[size + 64];
