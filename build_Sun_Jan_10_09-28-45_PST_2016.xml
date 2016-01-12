@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="junktransfer" default="all">
+  
+  
+  <property file="build.properties"/>
+  <!-- Uncomment the following property if no tests compilation is needed -->
+  <!-- 
+  <property name="skip.tests" value="true"/>
+   -->
+  
+  <!-- Compiler options -->
+  
+  <property name="compiler.debug" value="on"/>
+  <property name="compiler.generate.no.warnings" value="off"/>
+  <property name="compiler.args" value=""/>
+  <property name="compiler.max.memory" value="700m"/>
+  <patternset id="ignored.files">
+    <exclude name="**/*.hprof/**"/>
+    <exclude name="**/*.pyc/**"/>
+    <exclude name="**/*.pyo/**"/>
+    <exclude name="**/*.rbc/**"/>
+    <exclude name="**/*~/**"/>
+    <exclude name="**/.DS_Store/**"/>
+    <exclude name="**/.git/**"/>
+    <exclude name="**/.hg/**"/>
+    <exclude name="**/.svn/**"/>
+    <exclude name="**/CVS/**"/>
+    <exclude name="**/RCS/**"/>
+    <exclude name="**/SCCS/**"/>
+    <exclude name="**/__pycache__/**"/>
+    <exclude name="**/_svn/**"/>
+    <exclude name="**/rcs/**"/>
+    <exclude name="**/vssver.scc/**"/>
+    <exclude name="**/vssver2.scc/**"/>
+  </patternset>
+  <patternset id="library.patterns">
+    <include name="*.egg"/>
+    <include name="*.jar"/>
+    <include name="*.ear"/>
+    <include name="*.ane"/>
+    <include name="*.apk"/>
+    <include name="*.swc"/>
+    <include name="*.war"/>
+    <include name="*.zip"/>
+  </patternset>
+  <patternset id="compiler.resources">
+    <exclude name="**/?*.java"/>
+    <exclude name="**/?*.form"/>
+    <exclude name="**/?*.class"/>
+    <exclude name="**/?*.groovy"/>
+    <exclude name="**/?*.scala"/>
+    <exclude name="**/?*.flex"/>
+    <exclude name="**/?*.kt"/>
+    <exclude name="**/?*.clj"/>
+    <exclude name="**/?*.aj"/>
+  </patternset>
+  
+  
+  <!-- Project Libraries -->
+  
+  <path id="library.com.google.guava:guava:19.0-rc2.classpath">
+    <pathelement location="${basedir}/lib/guava-19.0-rc2.jar"/>
+  </path>
+  
+  <path id="library.org.isomorphism:token-bucket:1.7.classpath">
+    <pathelement location="${basedir}/lib/guava-18.0.jar"/>
+    <pathelement location="${basedir}/lib/token-bucket-1.7.jar"/>
+  </path>
+  
+  
+  <!-- Global Libraries -->
+  
+  <!-- Modules -->
+  
+  
+  <!-- Module JunkTransfer -->
+  
+  <dirname property="module.junktransfer.basedir" file="${ant.file}"/>
+  
+  
+  
+  <property name="compiler.args.junktransfer" value="-encoding UTF-8 -source 8 -target 8 ${compiler.args}"/>
+  
+  <property name="junktransfer.output.dir" value="${module.junktransfer.basedir}/out/production/JunkTransfer"/>
+  <property name="junktransfer.testoutput.dir" value="${module.junktransfer.basedir}/out/test/JunkTransfer"/>
+  
+  <path id="junktransfer.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="junktransfer.module.production.classpath">
+    <pathelement location="${idea.home}/lib/junit.jar"/>
+    <path refid="library.com.google.guava:guava:19.0-rc2.classpath"/>
+    <path refid="library.org.isomorphism:token-bucket:1.7.classpath"/>
+  </path>
+  
+  <path id="junktransfer.runtime.production.module.classpath">
+    <pathelement location="${junktransfer.output.dir}"/>
+    <pathelement location="${idea.home}/lib/junit.jar"/>
+    <path refid="library.com.google.guava:guava:19.0-rc2.classpath"/>
+    <path refid="library.org.isomorphism:token-bucket:1.7.classpath"/>
+  </path>
+  
+  <path id="junktransfer.module.classpath">
+    <pathelement location="${junktransfer.output.dir}"/>
+    <pathelement location="${idea.home}/lib/junit.jar"/>
+    <pathelement location="${idea.home}/lib/junit.jar"/>
+    <path refid="library.com.google.guava:guava:19.0-rc2.classpath"/>
+    <path refid="library.org.isomorphism:token-bucket:1.7.classpath"/>
+  </path>
+  
+  <path id="junktransfer.runtime.module.classpath">
+    <pathelement location="${junktransfer.testoutput.dir}"/>
+    <pathelement location="${junktransfer.output.dir}"/>
+    <pathelement location="${idea.home}/lib/junit.jar"/>
+    <pathelement location="${idea.home}/lib/junit.jar"/>
+    <path refid="library.com.google.guava:guava:19.0-rc2.classpath"/>
+    <path refid="library.org.isomorphism:token-bucket:1.7.classpath"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.junktransfer">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.junktransfer">
+    <patternset refid="excluded.from.module.junktransfer"/>
+  </patternset>
+  
+  <path id="junktransfer.module.sourcepath">
+    <dirset dir="${module.junktransfer.basedir}">
+      <include name="src"/>
+    </dirset>
+  </path>
+  
+  
+  <target name="compile.module.junktransfer" depends="compile.module.junktransfer.production,compile.module.junktransfer.tests" description="Compile module JunkTransfer"/>
+  
+  <target name="compile.module.junktransfer.production" description="Compile module JunkTransfer; production classes">
+    <mkdir dir="${junktransfer.output.dir}"/>
+    <javac destdir="${junktransfer.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true">
+      <compilerarg line="${compiler.args.junktransfer}"/>
+      <bootclasspath refid="junktransfer.module.bootclasspath"/>
+      <classpath refid="junktransfer.module.production.classpath"/>
+      <src refid="junktransfer.module.sourcepath"/>
+      <patternset refid="excluded.from.compilation.junktransfer"/>
+    </javac>
+    
+    <copy todir="${junktransfer.output.dir}">
+      <fileset dir="${module.junktransfer.basedir}/src">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="compile.module.junktransfer.tests" depends="compile.module.junktransfer.production" description="compile module JunkTransfer; test classes" unless="skip.tests"/>
+  
+  <target name="clean.module.junktransfer" description="cleanup module">
+    <delete dir="${junktransfer.output.dir}"/>
+    <delete dir="${junktransfer.testoutput.dir}"/>
+  </target>
+  
+  <target name="init" description="Build initialization">
+    <!-- Perform any build initialization in this target -->
+  </target>
+  
+  <target name="clean" depends="clean.module.junktransfer" description="cleanup all"/>
+  
+  <target name="build.modules" depends="init, clean, compile.module.junktransfer" description="build all modules"/>
+  
+  <target name="all" depends="build.modules" description="build all"/>
+</project>
