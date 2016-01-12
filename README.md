@@ -1,13 +1,13 @@
 # JunkTransfer
 
-##Build instructions 
+## Build instructions 
 This project requires JDK 1.8 and Ant build system. 
 
-##Build Instruction
+## Build Instruction
 $ cd JunkTransfer  
 $ ant clean all  
 
-Run Instruction
+## Run Instruction
 $ cd JunkTransfer
 $ java -classpath "lib/*:out/production/JunkTransfer"  
 net.amirrazmjou.Main -s data/test_large 10240 192.168.126.1:6666   
