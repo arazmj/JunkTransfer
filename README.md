@@ -8,10 +8,12 @@ $ cd JunkTransfer
 $ ant clean all  
 
 ## Run Instruction
+```
 $ cd JunkTransfer
 $ java -classpath "lib/*:out/production/JunkTransfer"  
 net.amirrazmjou.Main -s data/test_large 10240 192.168.126.1:6666   
 192.168.126.1:6667 192.168.126.1:6668 192.168.126.1:6669  
+```
 
 ## How you tested your solution.
 I created several loopback interfaces on my local desktop, I also assigned different IP address and networks to each one of the loopback interfaces. Later I used Wireshark, tcpdump, iftop to monitor the bandwidth usage of the server. I also interrupted some of clients during the test on purpose to make sure that the server can adjust the extra free bandwidth.
