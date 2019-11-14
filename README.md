@@ -4,8 +4,10 @@
 This project requires JDK 1.8 and Ant build system. 
 
 ## Build Instruction
+```
 $ cd JunkTransfer  
 $ ant clean all  
+```
 
 ## Run Instruction
 ```
