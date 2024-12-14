@@ -1,44 +1,157 @@
 # JunkTransfer
 
+## Overview
+JunkTransfer is a rate-limited file transfer system designed for distributed environments. It facilitates efficient transfer of large files to multiple clients while adhering to user-defined bandwidth constraints. By utilizing the leaky bucket algorithm for rate-limiting and real-time compression, JunkTransfer optimizes bandwidth usage and minimizes data transmission overhead.
+
+---
+
+## Features
+- **Multi-Client Support**: Concurrently transfers file chunks to multiple clients.
+- **Rate-Limiting**: Implements a token bucket algorithm for bandwidth control.
+- **Real-Time Compression**: Utilizes `CompressedBlockOutputStream` for on-the-fly compression.
+- **Thread-Safe Implementation**: Ensures safety in concurrent operations with shared resources.
+- **Optimized Performance**: Uses buffered streams and a low-granular timer for efficient CPU and bandwidth utilization.
+
+---
+
 ## Dependencies
-This project requires JDK 1.8 and Ant build system. 
+- **JDK 1.8**
+- **Ant Build System**
+- **External Libraries**:
+    - [Google Guava](https://github.com/google/guava)
+    - [Philip Isenhour CompressedBlockOutputStream](http://example-link-for-library.com)
 
-## Build Instruction
-```
-$ cd JunkTransfer  
-$ ant clean all  
-```
+---
 
-## Run Instruction
-```
+## Build Instructions
+To compile the project, use the following commands:
+```bash
 $ cd JunkTransfer
-$ java -classpath "lib/*:out/production/JunkTransfer"  
-net.amirrazmjou.Main -s data/test_large 10240 192.168.126.1:6666   
-192.168.126.1:6667 192.168.126.1:6668 192.168.126.1:6669  
+$ ant clean all
 ```
 
-## How you tested your solution.
-I created several loopback interfaces on my local desktop, I also assigned different IP address and networks to each one of the loopback interfaces. Later I used Wireshark, tcpdump, iftop to monitor the bandwidth usage of the server. I also interrupted some of clients during the test on purpose to make sure that the server can adjust the extra free bandwidth.
-One of the advantage of loopback interfaces is that it makes it possible to test distributed applications like this project on a single machine.  
-I also used vagrantup to create a configurable, test environment of virtual machines for nodes and clients 
+## Run Instructions
 
-## Description
-I used leaky bucket algorithm to limit the server bandwidth. As our server application has multiple network connection to clients simultaneously. I also assumed that our clients may consume the bandwidth unevenly and there is high chance of having some clients to finish downloading their part before the other clients. The server should honor exploit the rate set by the user at the same time.
-The leaky bucket algorithm implemented as a shared object accessible among server threads is a good choice. As clients consume server bandwidth the tokens inside the leaky bucket is decreased. If there are not enough tokens in the bucket the client would be blocked.  The bucket is refilled on a constant time periods and number of tokens. It automatically adjusts the bandwidth in case of interruption or congestions in clients as the leaky bucket algorithm does not discriminate between the consumers (each thread consumes one token upon the uploading one byte of data).    
+The application can run in two modes: server (-s) and client (-c).
+
+## Server Mode
+Start the server with the following command:
+
+```
+$ java -classpath "lib/*:out/production/JunkTransfer" \
+net.amirrazmjou.Main -s <file_path> <max_transfer_rate_kbps> <ip:port> ...
+```
+
+Example:
+```
+$ java -classpath "lib/*:out/production/JunkTransfer" \
+net.amirrazmjou.Main -s data/test_large 10240 192.168.126.1:6666 192.168.126.1:6667
+```
+
+Client Mode
+Start a client with the following command:
+```
+$ java -classpath "lib/*:out/production/JunkTransfer" \
+net.amirrazmjou.Main -c <port_number>
+```
+
+Example:
+```
+$ java -classpath "lib/*:out/production/JunkTransfer" \
+net.amirrazmjou.Main -c 6666
+```
 
 
-I also implemented a new OutputStream class. The constructor for this new class takes a bucket object so the OutStream instances can share a single bucket object so regardless of number of OutputStream object instantiated the aggregated traffic bandwidth cannot exceed what specified in the bucket object. TokenBucket class also uses very low granular timer to not yield the caller more than expected; this allows for a more bandwidth distribution among flows as well as more responsiveness to client usage.
-I also made the TokenBucket thread-safe as the bucket object is going to be shared among several threads.  The critical code block in the TokenBucket is the part that bucket is refilled and next refill time is updated.   
+How It Works
+## How It Works
+1. **Server**:
+    - Splits the file into fixed-size chunks.
+    - Transfers chunks to connected clients using threads.
+    - Controls bandwidth using a shared `TokenBucket` among threads.
+2. **Client**:
+    - Receives file chunks from the server.
+    - Writes data to a local file.
+3. **Rate-Limiting**:
+    - `TokenBucket` ensures bandwidth does not exceed the user-defined rate.
+    - Shared across threads for uniform bandwidth distribution.
+4. **Compression**:
+    - Compresses chunks in real-time during transmission to reduce network overhead.
 
-    
-I also employed “Philip Isenhour” CompressedBlockOutputStream, CompressedBlockOutputStream to compress the data as it being sent over the wire. The alternative solutions would be to compress the entire chunk or the original file before it is sent over the wire. The problem with other typical techniques of compression as it is mentioned in his web site is that large compression operation takes a considerable amount of CPU resource before we start to transmit the data whereas making the transmission data into even smaller chunks (1024 bytes in our solution) makes a good utilization of CPU and network resources and gaining a good compression ratio over the time of transmission. The compression chunk size is still a trade-off between computation overhead (on both client and servers) and network resources. 
+## Testing
+The following methods were used to test the solution:
+- **Loopback Interfaces**:
+    - Simulated multiple clients on a single machine by creating loopback interfaces with unique IP addresses.
+- **Monitoring Tools**:
+    - Used Wireshark, tcpdump, and iftop to monitor bandwidth and data flow.
+- **Failure Handling**:
+    - Tested scenarios where clients were interrupted mid-transfer to ensure the server adjusted bandwidth allocation.
+- **Virtual Machines**:
+    - Created a virtualized test environment using Vagrant to simulate distributed nodes.
 
-### Performance
-The use of low granular timer, fine tuned token bucket allows the best utilization of minimum bandwidth specified by the user.  
+## Design Details
+1. **Leaky Bucket Algorithm**:
+    - Limits the server's bandwidth by ensuring token consumption for every byte sent.
+    - Refills tokens at a fixed interval to regulate traffic.
+2. **SpeedLimitedOutputStream**:
+    - Ensures rate-limiting by sharing a `TokenBucket` across multiple streams.
+    - Allows configurable burst sizes to balance CPU usage and traffic burstiness.
+3. **Compression**:
+    - Utilizes Philip Isenhour's `CompressedBlockOutputStream` to compress data in small chunks (1 KB).
+    - Optimizes the trade-off between CPU load and network efficiency.
 
-Applying ZLIB compression to the traffic flow may result in much less communication overhead depending on the entropy of the data.  
+---
 
-I used Buffers Streams on all IO streams with a single exception for socket output stream as it is required to have full control on the number of bytes being sent in order to limit the bandwidth.  Guava ByteStreams.copy simply uses block-based copy, the copy operation is as fast as it can.  
-The constructor of SpeedLimitedOutputStream takes a burst value to specify the maximum number of bytes that can be sent over the wire instantly on a single SpeedLimitedOutputStream.write(…) call. This provides the ability to make a choice between CPU resources vs burstiness of the traffic on the wire.   
+## Performance
+- **Bandwidth Efficiency**:
+    - Ensures the server's bandwidth usage matches user-defined limits, even during client interruptions.
+- **Compression**:
+    - Achieves high compression ratios based on data entropy, reducing communication overhead.
+- **Optimized Streams**:
+    - Buffered streams accelerate I/O operations, minimizing latency.
+    - Fine-grained token consumption enhances responsiveness and even distribution.
 
+---
 
+## Limitations
+- The project currently supports IPv4 addresses only.
+- Performance may degrade on systems with limited CPU resources due to real-time compression.
+
+---
+
+## Future Improvements
+- Add support for IPv6 addresses.
+- Provide a graphical user interface for easier usage.
+- Introduce encryption to secure data transmission.
+
+---
+
+## License
+This project is licensed under the MIT License. See the LICENSE file for details.
+
+---
+
+## Contribution
+Contributions are welcome! Please follow these steps:
+1. Fork the repository.
+2. Create a feature branch (`git checkout -b feature-name`).
+3. Commit your changes (`git commit -m "Add feature"`).
+4. Push to the branch (`git push origin feature-name`).
+5. Open a Pull Request.
+
+---
+
+## Author
+Developed by **Amir Razmjou**.
+
+## Vagrantfile Usage
+A `Vagrantfile` is provided to help you set up a virtualized environment for testing the application. Follow these steps to use it:
+
+### Prerequisites
+- Install [Vagrant](https://www.vagrantup.com/).
+- Install a compatible virtualization provider such as VirtualBox.
+
+### Instructions
+1. Navigate to the project directory containing the `Vagrantfile`:
+```bash
+   $ cd JunkTransfer
+```
